@@ -1,0 +1,103 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from faker import Faker
+import random
+import time
+
+
+fake = Faker()
+
+
+chrome_options = Options()
+chrome_options.add_argument("--incognito")  # Mode incognito
+chrome_options.add_argument("--start-maximized")
+chrome_options.add_argument("--disable-blink-features=AutomationControlled")  # Anti-detect
+chrome_options.add_argument("--disable-infobars")
+chrome_options.add_argument("--disable-extensions")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+
+
+print("🚀 Memulai browser (incognito mode)...")
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
+try:
+    # === Langsung buka halaman signup Twitter ===
+    print("🌐 Membuka halaman signup Twitter langsung...")
+    driver.get("https://twitter.com/i/flow/signup")
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+    print("✅ Halaman signup berhasil dimuat.")
+
+    
+    first_name = fake.first_name()
+    last_name = fake.last_name()
+    random_number = random.randint(100, 999)
+    full_name = f"{first_name} {last_name}{random_number}"
+    email = f"{first_name.lower()}{last_name.lower()}{random_number}@citayam.com"
+    months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"]
+    birth_month = random.choice(months)
+    birth_day = random.randint(1, 28)
+    birth_year = random.randint(1994, 2000)
+
+    print(f"📝 Mengisi data signup:")
+    print(f"   📛 Nama     : {full_name}")
+    print(f"   📧 Email    : {email}")
+    print(f"   📅 Tanggal  : {birth_day}-{birth_month}-{birth_year}")
+
+
+    name_input = WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.NAME, "name"))
+    )
+    name_input.send_keys(full_name)
+
+   
+    try:
+        use_email_btn = driver.find_element(By.XPATH, '//span[text()="Use email instead"]')
+        use_email_btn.click()
+        print("📧 Beralih ke mode input email.")
+    except:
+        print("ℹ️ Tombol 'Use email instead' tidak ditemukan (mungkin sudah mode email).")
+
+   
+    email_input = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.NAME, "email"))
+    )
+    email_input.send_keys(email)
+
+  
+    month_select = driver.find_element(By.ID, "SELECTOR_1")
+    month_select.send_keys(str(birth_month))
+
+    day_select = driver.find_element(By.ID, "SELECTOR_2")
+    day_select.send_keys(str(birth_day))
+
+    year_select = driver.find_element(By.ID, "SELECTOR_3")
+    year_select.send_keys(str(birth_year))
+
+    print("✅ Data form berhasil diisi.")
+
+  
+    next_btn = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//span[text()="Next"]'))
+    )
+    next_btn.click()
+    print("✅ Klik tombol Next.")
+
+    time.sleep(5)  
+
+    print("🌟 Browser dibiarkan terbuka. Silakan cek manual jika perlu.")
+    input("🔵 Tekan ENTER untuk menutup browser jika sudah selesai...")
+
+except Exception as e:
+    print(f"❌ Terjadi error: {e}")
+    driver.save_screenshot("error_screenshot.png")
+    print("📸 Screenshot error disimpan sebagai 'error_screenshot.png'.")
+
+# driver.quit() => DIHAPUS
